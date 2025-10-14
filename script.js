@@ -1,7 +1,14 @@
 function createLabyrinthe(cases) {
     let labyrinthe = document.getElementById('labyrinthe');
-    let tailleX = 3;
-    let tailleY = 3;
+    labyrinthe.innerHTML = ""; // vider avant d'afficher un nouveau labyrinthe
+
+     // On calcule la taille du labyrinthe en cherchant les max des coordonnées
+    let maxX = Math.max(...cases.map(c => c.posX));
+    let maxY = Math.max(...cases.map(c => c.posY));
+
+    let tailleX = maxX + 1; // +1 car les coordonnées commencent à 0
+    let tailleY = maxY + 1;
+    
 
     // Configuration du conteneur du labyrinthe
     labyrinthe.style.gridTemplateColumns = `repeat(${tailleX}, 40px)`;
@@ -30,7 +37,7 @@ function createLabyrinthe(cases) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-    createLabyrinthe(data["3"]["ex-0"]);
+    createLabyrinthe(data["10"]["ex-0"]);
 });
 
 
