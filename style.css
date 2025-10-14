@@ -1,0 +1,10 @@
+#labyrinthe {
+    display: grid;
+    grid-template-columns: repeat(10, 40px); /* 10 colonnes de 40px */
+    grid-template-rows: repeat(10, 40px);    /* 10 lignes de 40px */
+    gap: 0;
+}
+
+.case {
+  background-color: white;
+}
