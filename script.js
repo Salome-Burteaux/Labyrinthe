@@ -41,6 +41,82 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 
+// VERSION ITÉRATIVE DE L'ALGO DFS
+// Renvoie le chemin de l'entrée à la sortie sous forme de liste de cases, ou null si pas de chemin
+//
+function findPathDFS(cases) {
+
+    // Trouver l'entrée et la sortie
+    const entrance = cases.find(c => c.entrance);
+    const exit = cases.find(c => c.exit);
+    if (!entrance || !exit) return null;
+
+    // Stack pour gérer le parcours
+    const stack = [entrance];
+    // Set pour garder la trace des visités
+    const visited = new Set();
+    // Map pour garder la trace des parents
+    const parent = new Map();
+
+    // Fonction pour obtenir les voisins accessibles (sans mur)
+    function getNeighbours(cell) {
+        const neighbours = [];
+        const directions = [
+            { dx: 0, dy: -1, wallIndex: 0, oppositeWall: 2 }, // haut
+            { dx: 1, dy: 0, wallIndex: 1, oppositeWall: 3 },  // droite
+            { dx: 0, dy: 1, wallIndex: 2, oppositeWall: 0 },  // bas
+            { dx: -1, dy: 0, wallIndex: 3, oppositeWall: 1 }  // gauche
+        ];
+
+        for (const dir of directions) {
+            const nx = cell.posX + dir.dx;
+            const ny = cell.posY + dir.dy;
+            const neighbour = cases.find(c => c.posX === nx && c.posY === ny);
+
+            // Vérifie si le voisin existe et qu’il n’y a PAS de mur entre les deux
+            if (
+                neighbour &&
+                !cell.walls[dir.wallIndex] &&
+                !neighbour.walls[dir.oppositeWall]
+            ) {
+                neighbours.push(neighbour);
+            }
+        }
+        return neighbours;
+    }
+
+    // Boucle DFS
+    while (stack.length > 0) {
+        const v = stack.pop();
+
+        const id = `${v.posX},${v.posY}`;
+        if (visited.has(id)) continue;
+        visited.add(id);
+
+        if (v === exit) {
+            // Retrouver le chemin à partir des parents
+            const path = [];
+            let current = v;
+            while (current) {
+                path.unshift(current);
+                current = parent.get(current);
+            }
+            return path;
+        }
+
+        // Parcours des voisins
+        const neighbours = getNeighbours(v);
+        for (const w of neighbours) {
+            const wid = `${w.posX},${w.posY}`;
+            if (!visited.has(wid)) {
+                parent.set(w, v); // "Tag v as the parent of w"
+                stack.push(w);
+            }
+        }
+    }
+
+    return null; // Aucun chemin trouvé
+}
 
 
 
