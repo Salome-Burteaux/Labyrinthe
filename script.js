@@ -94,3 +94,45 @@ document.addEventListener("DOMContentLoaded", () => {
 //         deplacerJoueur(direction)
 //     FIN TANT QUE
 // FIN PROCÉDURE
+
+
+// Version itérative
+// fonction DFS_iteratif(départ):
+//     créer une pile vide
+//     empiler le point de départ
+//     créer un ensemble "visités" vide
+
+//     tant que la pile n'est pas vide:
+//         (x, y) ← dépiler le sommet
+
+//         si (x, y) est un mur ou déjà visité:
+//             continuer
+
+//         marquer (x, y) comme visité
+//         afficher "Visite de (x, y)"
+
+//         si (x, y) est la sortie:
+//             arrêter et dire "trouvé"
+
+//         empiler les voisins (haut, bas, gauche, droite)
+
+
+
+// Version récurisive 
+// fonction DFS_recursif(x, y, visités):
+//     si (x, y) est hors du labyrinthe ou un mur ou déjà visité:
+//         retourner faux
+
+//     marquer (x, y) comme visité
+//     afficher "Visite de (x, y)"
+
+//     si (x, y) est la sortie:
+//         afficher "trouvé"
+//         retourner vrai
+
+//     si DFS_recursif(x-1, y, visités): retourner vrai   // haut
+//     si DFS_recursif(x, y+1, visités): retourner vrai   // droite
+//     si DFS_recursif(x+1, y, visités): retourner vrai   // bas
+//     si DFS_recursif(x, y-1, visités): retourner vrai   // gauche
+
+//     retourner faux
