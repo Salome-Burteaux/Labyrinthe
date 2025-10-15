@@ -36,9 +36,9 @@ function createLabyrinthe(cases) {
     });
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-    createLabyrinthe(data["10"]["ex-0"]);
-});
+// document.addEventListener("DOMContentLoaded", () => {
+//     createLabyrinthe(data["10"]["ex-0"]);
+// });
 
 
 // VERSION ITÉRATIVE DE L'ALGO DFS
@@ -88,36 +88,52 @@ function findPathDFS(cases) {
     // Boucle DFS
     while (stack.length > 0) {
         const v = stack.pop();
-
         const id = `${v.posX},${v.posY}`;
         if (visited.has(id)) continue;
         visited.add(id);
 
-        if (v === exit) {
-            // Retrouver le chemin à partir des parents
+        // Compare par coordonnées
+        if (v.posX === exit.posX && v.posY === exit.posY) {
             const path = [];
             let current = v;
             while (current) {
                 path.unshift(current);
-                current = parent.get(current);
+                current = parent.get(`${current.posX},${current.posY}`); // stocke les id dans parent
             }
             return path;
         }
 
-        // Parcours des voisins
         const neighbours = getNeighbours(v);
         for (const w of neighbours) {
             const wid = `${w.posX},${w.posY}`;
             if (!visited.has(wid)) {
-                parent.set(w, v); // "Tag v as the parent of w"
+                parent.set(wid, id); // stocke les ids
                 stack.push(w);
             }
         }
     }
 
+
     return null; // Aucun chemin trouvé
 }
 
+document.addEventListener("DOMContentLoaded", () => {
+    const mazeData = data["10"]["ex-0"];
+    createLabyrinthe(mazeData);
+
+    const path = findPathDFS(mazeData);
+    if (path) {
+        const labyrinthe = document.getElementById('labyrinthe');
+        const divs = labyrinthe.querySelectorAll('.case');
+
+        path.forEach(cell => {
+            const index = mazeData.indexOf(cell);
+            divs[index].style.backgroundColor = 'yellow'; // couleur du chemin
+        });
+    } else {
+        console.log("Aucun chemin trouvé !");
+    }
+});
 
 
 
