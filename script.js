@@ -21,6 +21,9 @@ function createLabyrinthe(cases) {
         div.style.width = '40px';
         div.style.height = '40px';
 
+        // on donne un id unique basé sur les coordonnées
+        div.id = `case-${cell.posX}-${cell.posY}`;
+
         // murs 
         const walls = cell.walls;
         div.style.borderTop = walls[0] ? '2px solid rgb(145, 255, 0)' : 'none';
@@ -36,211 +39,194 @@ function createLabyrinthe(cases) {
     });
 }
 
-// document.addEventListener("DOMContentLoaded", () => {
-//     createLabyrinthe(data["10"]["ex-0"]);
+// ---------------------------------------------------------------------
+// DFS itératif
+// ---------------------------------------------------------------------
+// function solveLabyrinthe(cases){
+//   const entrance = cases.find(c => c.entrance);
+//   const exit = cases.find(c => c.exit);
+//   if(!entrance || !exit) return null;
+
+//   const stack = [entrance];
+//   const visited = new Set();
+//   const parent = new Map();
+
+//   function getNeighbours(cell){
+//     const neighbours = [];
+//     const dirs = [
+//   {dx:-1, dy:0, wallIndex:0, opp:2}, // haut → ligne-1
+//   {dx:0, dy:1, wallIndex:1, opp:3},  // droite → col+1
+//   {dx:1, dy:0, wallIndex:2, opp:0},  // bas → ligne+1
+//   {dx:0, dy:-1, wallIndex:3, opp:1}, // gauche → col-1
+// ];
+
+//     dirs.forEach(d=>{
+//       const nx = cell.posX + d.dx;
+//       const ny = cell.posY + d.dy;
+//       const n = cases.find(c=>c.posX===nx && c.posY===ny);
+//       if(n && !cell.walls[d.wallIndex] && !n.walls[d.opp]) neighbours.push(n);
+//     });
+//     console.log(`Voisins de (${cell.posX},${cell.posY}) :`, neighbours.map(c=>`(${c.posX},${c.posY})`));
+//     return neighbours;
+//   }
+
+//   while(stack.length>0){
+//     const v = stack.pop();
+//     const id = `${v.posX},${v.posY}`;
+//     if(visited.has(id)) {
+//       console.log(`Case déjà visitée: (${v.posX},${v.posY})`);
+//       continue;
+//     }
+
+//     console.log(`Visite de la case: (${v.posX},${v.posY})`);
+//     visited.add(id);
+
+//     if(v.posX === exit.posX && v.posY === exit.posY){
+//       console.log("Sortie trouvée !");
+//       const path = [];
+//       let current = v;
+//       while(current){
+//         path.unshift(current);
+//         current = parent.get(current);
+//       }
+//       console.log("Chemin retrouvé :", path.map(c=>`(${c.posX},${c.posY})`));
+//       return path;
+//     }
+
+//     const neighbours = getNeighbours(v);
+//     if(neighbours.length === 0) console.log(`Aucun voisin accessible pour (${v.posX},${v.posY})`);
+
+//     neighbours.forEach(n=>{
+//       const nid = `${n.posX},${n.posY}`;
+//       if(!visited.has(nid)){
+//         parent.set(n,v);
+//         stack.push(n);
+//         console.log(`Ajout à la pile: (${n.posX},${n.posY})`);
+//       }
+//     });
+//   }
+
+//   console.log("Pile vide, aucun chemin trouvé !");
+//   return null;
+// }
+
+// // --- Colorier le chemin dans la grille ---
+// function showPath(path) {
+//   if(!path) {
+//     console.log("Aucun chemin trouvé !");
+//     return;
+//   }
+
+//   path.forEach(c => {
+//     const div = document.getElementById(`case-${c.posX}-${c.posY}`);
+//     // ne pas colorier entrée / sortie
+//     if(div && !div.classList.contains('entrance') && !div.classList.contains('exit')) {
+//       div.style.backgroundColor = 'yellow';
+//     }
+//   });
+// }
+
+
+// document.addEventListener('DOMContentLoaded', ()=>{
+//   // Choisir le labyrinthe à utiliser
+//   const mazeData = data["10"]["ex-0"];
+
+//   // Créer la grille visuelle
+//   createLabyrinthe(mazeData);
+
+//   // Lancer le DFS itératif
+//   document.getElementById('solveBtn').addEventListener('click', ()=>{
+//     // récupérer le chemin pour le colorer
+//     const path = solveLabyrinthe(mazeData);
+//     showPath(path);
+// });
+
+//   const path = solveLabyrinthe(mazeData);
+//   if(path){
+//     const lab = document.getElementById('labyrinthe');
+//     path.forEach(c=>{
+//       const div = lab.querySelector(`.case[data-x='${c.posX}'][data-y='${c.posY}']`);
+//       if(div && !div.classList.contains('entrance') && !div.classList.contains('exit')){
+//         div.style.backgroundColor = 'yellow';
+//       }
+//     });
+//   } else {
+//     console.log("Aucun chemin trouvé !");
+//   }
 // });
 
 
-// VERSION ITÉRATIVE DE L'ALGO DFS
-// Renvoie le chemin de l'entrée à la sortie sous forme de liste de cases, ou null si pas de chemin
-//
-// Mini-labyrinthe 5x5
-// walls: [haut, droite, bas, gauche] true = mur
-
-
-// Création visuelle
-function createLabyrinthe(cases) {
-  const container = document.getElementById('labyrinthe');
-  container.innerHTML = '';
-  cases.forEach(c => {
-    const div = document.createElement('div');
-    div.classList.add('case');
-    if(c.entrance) div.classList.add('entrance');
-    if(c.exit) div.classList.add('exit');
-    div.dataset.x = c.posX;
-    div.dataset.y = c.posY;
-    container.appendChild(div);
-  });
-}
-
-// DFS itératif
-function findPathDFS(cases){
+// ---------------------------------------------------------------------
+// --- DFS récursif ---
+// ---------------------------------------------------------------------
+function solveLabyrintheRecursive(cases) {
   const entrance = cases.find(c => c.entrance);
   const exit = cases.find(c => c.exit);
   if(!entrance || !exit) return null;
 
-  const stack = [entrance];
   const visited = new Set();
-  const parent = new Map();
 
-  function getNeighbours(cell){
-    const neighbours = [];
-    const dirs = [
-      {dx:0, dy:-1, wallIndex:0, opp:2}, // haut
-      {dx:1, dy:0, wallIndex:1, opp:3},  // droite
-      {dx:0, dy:1, wallIndex:2, opp:0},  // bas
-      {dx:-1, dy:0, wallIndex:3, opp:1}, // gauche
-    ];
-    dirs.forEach(d=>{
-      const nx = cell.posX + d.dx;
-      const ny = cell.posY + d.dy;
-      const n = cases.find(c=>c.posX===nx && c.posY===ny);
-      if(n && !cell.walls[d.wallIndex] && !n.walls[d.opp]) neighbours.push(n);
-    });
-    console.log(`Voisins de (${cell.posX},${cell.posY}) :`, neighbours.map(c=>`(${c.posX},${c.posY})`));
-    return neighbours;
-  }
-
-  while(stack.length>0){
-    const v = stack.pop();
+  function dfs(v) {
     const id = `${v.posX},${v.posY}`;
-    if(visited.has(id)) {
-      console.log(`Case déjà visitée: (${v.posX},${v.posY})`);
-      continue;
-    }
+    if(visited.has(id)) return null;
 
-    console.log(`Visite de la case: (${v.posX},${v.posY})`);
     visited.add(id);
 
-    if(v.posX === exit.posX && v.posY === exit.posY){
-      console.log("Sortie trouvée !");
-      const path = [];
-      let current = v;
-      while(current){
-        path.unshift(current);
-        current = parent.get(current);
-      }
-      console.log("Chemin retrouvé :", path.map(c=>`(${c.posX},${c.posY})`));
-      return path;
+    if(v.posX === exit.posX && v.posY === exit.posY) {
+      // on a trouvé la sortie, retourne une liste avec cette case
+      return [v];
     }
 
-    const neighbours = getNeighbours(v);
-    if(neighbours.length === 0) console.log(`Aucun voisin accessible pour (${v.posX},${v.posY})`);
+    // --- trouver voisins accessibles ---
+    const dirs = [
+      {dx:-1, dy:0, wallIndex:0, opp:2}, // haut
+      {dx:0, dy:1, wallIndex:1, opp:3},  // droite
+      {dx:1, dy:0, wallIndex:2, opp:0},  // bas
+      {dx:0, dy:-1, wallIndex:3, opp:1}  // gauche
+    ];
 
-    neighbours.forEach(n=>{
-      const nid = `${n.posX},${n.posY}`;
-      if(!visited.has(nid)){
-        parent.set(n,v);
-        stack.push(n);
-        console.log(`Ajout à la pile: (${n.posX},${n.posY})`);
+    for(const d of dirs) {
+      const nx = v.posX + d.dx;
+      const ny = v.posY + d.dy;
+      const n = cases.find(c=>c.posX===nx && c.posY===ny);
+      if(n && !v.walls[d.wallIndex] && !n.walls[d.opp]) {
+        const path = dfs(n); // appel récursif
+        if(path) {
+          // concaténer v avec le chemin retourné par l'enfant
+          return [v, ...path];
+        }
       }
-    });
+    }
+
+    // aucun chemin trouvé depuis cette case
+    return null;
   }
 
-  console.log("Pile vide, aucun chemin trouvé !");
-  return null;
+  return dfs(entrance);
 }
 
-document.addEventListener('DOMContentLoaded', ()=>{
-  // Choisir le labyrinthe à utiliser
-  const mazeData = data["3"]["ex-0"];
+// --- Colorier le chemin dans la grille ---
+function showPath(path) {
+  if(!path) {
+    console.log("Aucun chemin trouvé !");
+    return;
+  }
+  path.forEach(c => {
+    const div = document.getElementById(`case-${c.posX}-${c.posY}`);
+    if(div && !div.classList.contains('entrance') && !div.classList.contains('exit')) {
+      div.style.backgroundColor = 'yellow';
+    }
+  });
+}
 
-  // Créer la grille visuelle
+// --- Exemple d'utilisation ---
+document.addEventListener('DOMContentLoaded', ()=>{
+  const mazeData = data["10"]["ex-0"];
   createLabyrinthe(mazeData);
 
-  // Lancer le DFS itératif
-  const path = findPathDFS(mazeData);
-  if(path){
-    const lab = document.getElementById('labyrinthe');
-    path.forEach(c=>{
-      const div = lab.querySelector(`.case[data-x='${c.posX}'][data-y='${c.posY}']`);
-      if(div && !div.classList.contains('entrance') && !div.classList.contains('exit')){
-        div.style.backgroundColor = 'yellow';
-      }
-    });
-  } else {
-    console.log("Aucun chemin trouvé !");
-  }
+  document.getElementById('solveBtn').addEventListener('click', ()=>{
+    const path = solveLabyrintheRecursive(mazeData);
+    showPath(path);
+  });
 });
 
-
-
-// PROCÉDURE initialiserJeu(taille, niveau)
-//     labyrinthe ← data[taille][niveau]  # récupérer les cases du labyrinthe
-//     joueur ← trouverCaseAvecEntrée(labyrinthe)  # position initiale du joueur
-//     afficherLabyrinthe(labyrinthe, joueur)
-// FIN PROCÉDURE
-
-// PROCÉDURE afficherLabyrinthe(labyrinthe, joueur)
-//     POUR chaque case DANS labyrinthe FAIRE
-//         créerDivPourCase(case)
-//         si case.position = joueur.position ALORS
-//             colorerDivCommeJoueur()
-//         si case.entrance ALORS
-//             colorerDivCommeEntrée()
-//         si case.exit ALORS
-//             colorerDivCommeSortie()
-//     FIN POUR
-// FIN PROCÉDURE
-
-// PROCÉDURE deplacerJoueur(direction)
-//     caseActuelle ← caseDuJoueur(joueur)
-    
-//     # vérifier le mur correspondant à la direction
-//     SI direction = "haut" ET caseActuelle.walls[0] = false ALORS
-//         joueur.positionY ← joueur.positionY - 1
-//     SINON SI direction = "droite" ET caseActuelle.walls[1] = false ALORS
-//         joueur.positionX ← joueur.positionX + 1
-//     SINON SI direction = "bas" ET caseActuelle.walls[2] = false ALORS
-//         joueur.positionY ← joueur.positionY + 1
-//     SINON SI direction = "gauche" ET caseActuelle.walls[3] = false ALORS
-//         joueur.positionX ← joueur.positionX - 1
-//     FIN SI
-
-//     afficherLabyrinthe(labyrinthe, joueur)
-
-//     SI joueur.position = caseAvecSortie(labyrinthe) ALORS
-//         afficherMessage("Victoire !")
-//     FIN SI
-// FIN PROCÉDURE
-
-// PROCÉDURE jouerLabyrinthe(taille, niveau)
-//     initialiserJeu(taille, niveau)
-
-//     TANT QUE joueur.position ≠ caseAvecSortie(labyrinthe)
-//         direction ← lireInputUtilisateur()
-//         deplacerJoueur(direction)
-//     FIN TANT QUE
-// FIN PROCÉDURE
-
-
-// Version itérative
-// fonction DFS_iteratif(départ):
-//     créer une pile vide
-//     empiler le point de départ
-//     créer un ensemble "visités" vide
-
-//     tant que la pile n'est pas vide:
-//         (x, y) ← dépiler le sommet
-
-//         si (x, y) est un mur ou déjà visité:
-//             continuer
-
-//         marquer (x, y) comme visité
-//         afficher "Visite de (x, y)"
-
-//         si (x, y) est la sortie:
-//             arrêter et dire "trouvé"
-
-//         empiler les voisins (haut, bas, gauche, droite)
-
-
-
-// Version récurisive 
-// fonction DFS_recursif(x, y, visités):
-//     si (x, y) est hors du labyrinthe ou un mur ou déjà visité:
-//         retourner faux
-
-//     marquer (x, y) comme visité
-//     afficher "Visite de (x, y)"
-
-//     si (x, y) est la sortie:
-//         afficher "trouvé"
-//         retourner vrai
-
-//     si DFS_recursif(x-1, y, visités): retourner vrai   // haut
-//     si DFS_recursif(x, y+1, visités): retourner vrai   // droite
-//     si DFS_recursif(x+1, y, visités): retourner vrai   // bas
-//     si DFS_recursif(x, y-1, visités): retourner vrai   // gauche
-
-//     retourner faux
